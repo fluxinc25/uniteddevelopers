@@ -5,7 +5,6 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import logoImage from '../../assets/logo.png';
-import bannerBg from '../../assets/logo2.png';
 
 const footerLinks = {
   services: [
@@ -39,18 +38,7 @@ const socialLinks = [
 
 const Footer = () => {
   return (
-    <footer
-      className="relative text-white overflow-hidden"
-      style={{
-        backgroundImage: `url(${bannerBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/70" />
-
+    <footer className="relative text-white overflow-hidden bg-black">
       {/* Top gradient line */}
       <div className="relative h-px w-full bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-50" />
 
