@@ -1,8 +1,11 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const router = express.Router();
 const Message = require('../models/Message');
 const { auth, adminOnly } = require('../middleware/auth');
+
+// ⚠️ REPLACE 're_xxxxxxxxx' WITH YOUR ACTUAL RESEND API KEY
+const resend = new Resend(process.env.RESEND_API_KEY || 're_xxxxxxxxx');
 
 router.post('/', async (req, res) => {
   try {
@@ -20,51 +23,40 @@ router.post('/', async (req, res) => {
 
     console.log('📨 Form submitted by:', name);
 
-    // 1. Save to MongoDB (THIS ALWAYS WORKS)
+    // 1. Save to MongoDB
     const msg = new Message({ name, email, subject, message, source });
     await msg.save();
     console.log('✅ Message saved to database');
 
-        // 2. Try to send email (WON'T CRASH IF IT FAILS, AND WON'T HANG)
+    // 2. Send email via Resend
     try {
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.log('⚠️ Email env vars missing, skipping email send');
-      } else {
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-          connectionTimeout: 5000,   // ← FAILS FAST (5 seconds)
-          greetingTimeout: 5000,
-          socketTimeout: 5000,
-        });
+      const { data, error } = await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: 'fluxinc.25@gmail.com',
+        replyTo: email,
+        subject: `📩 New Contact: ${subject}`,
+        html: `
+          <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e5e5;border-radius:16px;background:#fafafa;">
+            <h2 style="color:#171717;">New Message from Your Portfolio</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+            <p><strong>Subject:</strong> ${subject}</p>
+            <hr style="border:none;border-top:1px solid #e5e5e5;margin:16px 0;">
+            <p><strong>Message:</strong></p>
+            <p style="background:white;padding:16px;border-radius:12px;border:1px solid #e5e5e5;">${message.replace(/\n/g, '<br/>')}</p>
+          </div>
+        `,
+      });
 
-        await transporter.sendMail({
-          from: `"${name} (Portfolio Contact)" <${process.env.EMAIL_USER}>`,
-          to: process.env.EMAIL_USER,
-          replyTo: email,
-          subject: `📩 New Contact: ${subject}`,
-          html: `
-            <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e5e5;border-radius:16px;background:#fafafa;">
-              <h2 style="color:#171717;">New Message from Your Portfolio</h2>
-              <p><strong>Name:</strong> ${name}</p>
-              <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-              <p><strong>Subject:</strong> ${subject}</p>
-              <hr style="border:none;border-top:1px solid #e5e5e5;margin:16px 0;">
-              <p><strong>Message:</strong></p>
-              <p style="background:white;padding:16px;border-radius:12px;border:1px solid #e5e5e5;">${message.replace(/\n/g, '<br/>')}</p>
-            </div>
-          `,
-        });
-        console.log('✅ Email sent!');
+      if (error) {
+        console.log('⚠️ Resend error:', error);
+      } else {
+        console.log('✅ Email sent! ID:', data?.id);
       }
     } catch (emailErr) {
       console.log('⚠️ Email failed (but message saved):', emailErr.message);
     }
 
-    // 3. ALWAYS return success — message is in database
     res.status(201).json({ success: true, message: 'Message sent successfully!' });
 
   } catch (error) {
@@ -73,7 +65,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ─── Admin routes (unchanged) ───
+// ─── Admin routes ───
 router.get('/', auth, adminOnly, async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });
