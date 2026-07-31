@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     try {
       const { data, error } = await resend.emails.send({
         from: 'onboarding@resend.dev',
-        to: 'fluxinc.25@gmail.com',
+        to: 'hello.uniteddevelopers@gmail.com',
         replyTo: email,
         subject: `📩 New Contact: ${subject}`,
         html: `
