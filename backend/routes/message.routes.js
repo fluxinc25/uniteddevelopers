@@ -8,7 +8,7 @@ router.post('/', async (req, res) => {
   try {
     const { name, email, subject, message, source, website } = req.body;
 
-    // HONEYPOT: Only reject if it has actual content
+    // Honeypot
     if (website && website.trim().length > 0) {
       console.log('🤖 Bot detected! Honeypot filled with:', website);
       return res.status(400).json({ message: 'Spam detected' });
@@ -18,55 +18,59 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    console.log('📨 Form submitted by:', name, '| honeypot value:', JSON.stringify(website));
+    console.log('📨 Form submitted by:', name);
 
-    // 1. Save to MongoDB
+    // 1. Save to MongoDB (THIS ALWAYS WORKS)
     const msg = new Message({ name, email, subject, message, source });
     await msg.save();
+    console.log('✅ Message saved to database');
 
-    // 2. Check env vars
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error('❌ Missing EMAIL_USER or EMAIL_PASS in .env');
-      return res.status(500).json({ message: 'Server email config missing' });
+    // 2. Try to send email (WON'T CRASH IF IT FAILS)
+    try {
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log('⚠️ Email env vars missing, skipping email send');
+      } else {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"${name} (Portfolio Contact)" <${process.env.EMAIL_USER}>`,
+          to: process.env.EMAIL_USER,
+          replyTo: email,
+          subject: `📩 New Contact: ${subject}`,
+          html: `
+            <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e5e5;border-radius:16px;background:#fafafa;">
+              <h2 style="color:#171717;">New Message from Your Portfolio</h2>
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+              <p><strong>Subject:</strong> ${subject}</p>
+              <hr style="border:none;border-top:1px solid #e5e5e5;margin:16px 0;">
+              <p><strong>Message:</strong></p>
+              <p style="background:white;padding:16px;border-radius:12px;border:1px solid #e5e5e5;">${message.replace(/\n/g, '<br/>')}</p>
+            </div>
+          `,
+        });
+        console.log('✅ Email sent!');
+      }
+    } catch (emailErr) {
+      console.log('⚠️ Email failed (but message saved):', emailErr.message);
     }
 
-    // 3. Send email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    await transporter.verify();
-    const info = await transporter.sendMail({
-      from: `"${name} (Portfolio Contact)" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      replyTo: email,
-      subject: `📩 New Contact: ${subject}`,
-      html: `
-        <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e5e5e5;border-radius:16px;background:#fafafa;">
-          <h2 style="color:#171717;">New Message from Your Portfolio</h2>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-          <p><strong>Subject:</strong> ${subject}</p>
-          <hr style="border:none;border-top:1px solid #e5e5e5;margin:16px 0;">
-          <p><strong>Message:</strong></p>
-          <p style="background:white;padding:16px;border-radius:12px;border:1px solid #e5e5e5;">${message.replace(/\n/g, '<br/>')}</p>
-          <p style="margin-top:24px;font-size:12px;color:#a3a3a3;">📧 Reply to this email to respond directly to ${name}</p>
-        </div>
-      `,
-    });
-
-    console.log('✅ Email sent! ID:', info.messageId);
+    // 3. ALWAYS return success — message is in database
     res.status(201).json({ success: true, message: 'Message sent successfully!' });
+
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Server error:', error.message);
     res.status(500).json({ message: 'Failed to send message. Server error.' });
   }
 });
 
+// ─── Admin routes (unchanged) ───
 router.get('/', auth, adminOnly, async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 });

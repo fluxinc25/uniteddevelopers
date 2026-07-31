@@ -7,8 +7,10 @@ require('dotenv').config();
 
 const app = express();
 
+// ─── TRUST PROXY (REQUIRED FOR RENDER) ───
+app.set('trust proxy', 1);
+
 // ─── CORS ───
-// Reads your frontend URLs from env vars, falls back to localhost for dev
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -29,7 +31,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Static uploads (local dev only — Render free tier wipes files on restart)
+// Static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ─── Connect to MongoDB ───
@@ -47,10 +49,11 @@ connectDB();
 // ─── RATE LIMITER: Contact form ───
 const contactLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 3,
+  max: 50, // Increased for testing, set back to 3 later
   message: { message: 'Too many messages sent. Please try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false }  // ← FIXES THE CRASH
 });
 app.use('/api/messages', contactLimiter);
 
@@ -63,7 +66,7 @@ app.use('/api/messages', require('./routes/message.routes'));
 app.use('/api/hero', require('./routes/hero.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 
-// ─── Health check (Render uses this to verify your service is alive) ───
+// ─── Health check ───
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
@@ -72,7 +75,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'UnitedDevelopers API is running', status: 'OK' });
 });
 
-// ─── Start Server (ALWAYS — not just in dev) ───
+// ─── Start Server ───
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
