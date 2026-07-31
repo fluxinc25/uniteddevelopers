@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
     await msg.save();
     console.log('✅ Message saved to database');
 
-    // 2. Try to send email (WON'T CRASH IF IT FAILS)
+        // 2. Try to send email (WON'T CRASH IF IT FAILS, AND WON'T HANG)
     try {
       if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.log('⚠️ Email env vars missing, skipping email send');
@@ -36,6 +36,9 @@ router.post('/', async (req, res) => {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
           },
+          connectionTimeout: 5000,   // ← FAILS FAST (5 seconds)
+          greetingTimeout: 5000,
+          socketTimeout: 5000,
         });
 
         await transporter.sendMail({
