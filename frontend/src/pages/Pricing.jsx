@@ -15,7 +15,7 @@ const plans = [
     icon: Zap,
     color: 'primary',
     features: [
-      'Single Page Website',
+      'Double Page Website',
       'Mobile Responsive',
       'Basic SEO Setup',
       'Contact Form Integration',
@@ -24,6 +24,7 @@ const plans = [
     ],
     cta: 'Get Started',
     popular: false,
+    discount: null,
   },
   {
     name: 'Business',
@@ -44,10 +45,12 @@ const plans = [
     ],
     cta: 'Most Popular',
     popular: true,
+    discount: null,
   },
   {
     name: 'Premium',
-    price: '$1,499',
+    originalPrice: '$1,499',
+    price: '$1,299',
     period: '/project',
     description: 'Full-featured solution for established businesses.',
     icon: Crown,
@@ -65,6 +68,7 @@ const plans = [
     ],
     cta: 'Go Premium',
     popular: false,
+    discount: '15% OFF',
   },
   {
     name: 'Enterprise',
@@ -86,6 +90,7 @@ const plans = [
     ],
     cta: 'Contact Us',
     popular: false,
+    discount: null,
   },
 ];
 
@@ -155,9 +160,21 @@ const Pricing = () => {
                 className={`relative rounded-3xl p-6 lg:p-8 transition-all duration-500 ${
                   plan.popular
                     ? 'bg-gradient-to-b from-primary-600 to-primary-700 text-white shadow-glow scale-105 z-10'
+                    : plan.discount
+                    ? 'bg-white border-2 border-amber-400 shadow-soft hover:shadow-soft-lg hover:-translate-y-2'
                     : 'bg-white border border-surface-200/80 shadow-soft hover:shadow-soft-lg hover:-translate-y-2'
                 }`}
               >
+                {/* Discount Badge */}
+                {plan.discount && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <div className="px-4 py-1.5 rounded-full bg-amber-500 text-white text-xs font-bold shadow-lg flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3" />
+                      {plan.discount}
+                    </div>
+                  </div>
+                )}
+
                 {/* Popular Badge */}
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -199,6 +216,15 @@ const Pricing = () => {
 
                 {/* Price */}
                 <div className="mb-8">
+                  {plan.originalPrice && (
+                    <span
+                      className={`block text-lg line-through mb-1 ${
+                        plan.popular ? 'text-primary-300' : 'text-surface-400'
+                      }`}
+                    >
+                      {plan.originalPrice}
+                    </span>
+                  )}
                   <span
                     className={`text-4xl font-bold ${
                       plan.popular ? 'text-white' : 'text-surface-900'

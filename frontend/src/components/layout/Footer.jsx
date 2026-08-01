@@ -8,12 +8,13 @@ import logoImage from '../../assets/logo.png';
 
 const footerLinks = {
   services: [
-    { label: 'Business Websites', path: '/services' },
-    { label: 'E-Commerce', path: '/services' },
-    { label: 'Android Apps', path: '/services' },
-    { label: 'UI/UX Design', path: '/services' },
-    { label: 'Maintenance', path: '/services' },
+    { label: 'Business Websites', path: '/services#business-websites' },
+    { label: 'E-Commerce', path: '/services#ecommerce' },
+    { label: 'Android Apps', path: '/services#android-app-dev' },
+    { label: 'UI/UX Design', path: '/services#ui-ux-design' },
+    { label: 'Maintenance', path: '/services#maintenance-support' },
   ],
+  
   company: [
     { label: 'About Us', path: '/about' },
     { label: 'Projects', path: '/projects' },
@@ -22,10 +23,10 @@ const footerLinks = {
     { label: 'Contact', path: '/contact' },
   ],
   resources: [
-    { label: 'Blog', path: '#' },
+    { label: 'Blog', path: '/blog' },
     { label: 'Case Studies', path: '/projects' },
-    { label: 'FAQ', path: '#' },
-    { label: 'Privacy Policy', path: '#' },
+    { label: 'FAQ', path: '/faq' },
+    { label: 'Privacy Policy', path: '/privacy' },
   ],
 };
 
@@ -137,11 +138,21 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li className="flex items-start gap-3">
                   <Mail className="w-4 h-4 text-primary-400 mt-0.5 shrink-0" />
-                  <span className="text-white/70 text-sm">hello@uniteddevelopers.com</span>
+                  <a 
+                    href="mailto:hello.uniteddevelopers@gmail.com"
+                    className="text-white/70 hover:text-white text-sm transition-colors"
+                  >
+                    hello.uniteddevelopers@gmail.com
+                  </a>
                 </li>
                 <li className="flex items-start gap-3">
                   <Phone className="w-4 h-4 text-primary-400 mt-0.5 shrink-0" />
-                  <span className="text-white/70 text-sm">+92 332 4765340</span>
+                  <a 
+                    href="tel:+923324765340"
+                    className="text-white/70 hover:text-white text-sm transition-colors"
+                  >
+                    +92 325 4839926
+                  </a>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin className="w-4 h-4 text-primary-400 mt-0.5 shrink-0" />
@@ -157,13 +168,13 @@ const Footer = () => {
               © 2026 United Developers. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <Link to="#" className="text-white/60 hover:text-white text-sm transition-colors">
+              <Link to="/privacy" className="text-white/60 hover:text-white text-sm transition-colors">
                 Privacy
               </Link>
-              <Link to="#" className="text-white/60 hover:text-white text-sm transition-colors">
+              <Link to="/terms" className="text-white/60 hover:text-white text-sm transition-colors">
                 Terms
               </Link>
-              <Link to="#" className="text-white/60 hover:text-white text-sm transition-colors">
+              <Link to="/cookies" className="text-white/60 hover:text-white text-sm transition-colors">
                 Cookies
               </Link>
             </div>
